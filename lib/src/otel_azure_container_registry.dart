@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_azure_container_registry_suppression.dart';
 
@@ -49,53 +48,66 @@ Future<T> tracedAzureContainerRegistry<T>({
     final r = await invoke();
     return r.value;
   }
-  final t =
-      tracer ??
+  final t = tracer ??
       OTel.tracerProvider().getTracer('otel_azure_container_registry');
   final span = t.startSpan('acr $operation', kind: SpanKind.client);
   try {
-    span.setStringAttribute('azure.service', 'acr');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('azure.service', 'acr')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.subscriptionId != null) {
-        span.setStringAttribute('azure.subscription.id', res.subscriptionId!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('azure.subscription.id', res.subscriptionId!)
+        ]));
       }
       if (res.resourceGroup != null) {
-        span.setStringAttribute('azure.resource_group', res.resourceGroup!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('azure.resource_group', res.resourceGroup!)
+        ]));
       }
       if (res.registry != null) {
-        span.setStringAttribute('azure.acr.registry', res.registry!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('azure.acr.registry', res.registry!)]));
       }
       if (res.repository != null) {
-        span.setStringAttribute('azure.acr.repository', res.repository!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('azure.acr.repository', res.repository!)]));
       }
       if (res.imageDigest != null) {
-        span.setStringAttribute('container.image.id', res.imageDigest!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('container.image.id', res.imageDigest!)]));
       }
       if (res.imageTag != null) {
-        span.setStringAttribute('container.image.tag', res.imageTag!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('container.image.tag', res.imageTag!)]));
       }
       if (res.imageSize != null) {
-        span.setIntAttribute('container.image.size', res.imageSize!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('container.image.size', res.imageSize!)]));
       }
       if (res.region != null) {
-        span.setStringAttribute('cloud.region', res.region!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('cloud.region', res.region!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('acr.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('acr.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'acr.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'acr.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
